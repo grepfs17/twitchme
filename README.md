@@ -8,6 +8,7 @@ Chrome extension that monitors Twitch channels and opens new tabs when they go l
 - Auto-opens stream tabs when a channel goes live
 - Re-opens tabs if you close them while the stream is still live
 - Per-channel settings: mute (tab-level), auto-focus, number of tabs to open
+- It makes sure that the twitch player has audio on
 - Polling interval: 15s, 30s, 1min, or 5min
 - Optionally close tabs when the stream ends
 
