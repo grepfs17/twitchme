@@ -4,7 +4,6 @@ let pollTimeout = null
 
 chrome.runtime.onInstalled.addListener(async () => {
   await initDefaults()
-  await migrateData()
   startPolling()
   checkAllChannels()
 })
@@ -35,40 +34,6 @@ async function initDefaults() {
       }
     })
   }
-}
-
-async function migrateData() {
-  const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY)
-  if (!data) return
-  let changed = false
-
-  if (data.channels && data.channels.length) {
-    if (typeof data.channels[0] === 'string') {
-      data.channels = data.channels.map(c => ({
-        name: c, muted: true, focus: false, maxOpens: 1
-      }))
-      changed = true
-    } else if (data.channels[0].maxOpens === undefined) {
-      data.channels = data.channels.map(c => ({ ...c, maxOpens: c.maxOpens ?? 1 }))
-      changed = true
-    }
-  }
-
-  if (data.openTabs) {
-    for (const [key, val] of Object.entries(data.openTabs)) {
-      if (typeof val === 'number') {
-        data.openTabs[key] = [val]
-        changed = true
-      }
-    }
-  }
-
-  if (data.settings && 'maxTabs' in data.settings) {
-    delete data.settings.maxTabs
-    changed = true
-  }
-
-  if (changed) await chrome.storage.sync.set({ [STORAGE_KEY]: data })
 }
 
 function startPolling(intervalMinutes) {
