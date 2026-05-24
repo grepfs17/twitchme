@@ -1,49 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="options.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>TwitchMe</h1>
-      <p class="tagline">Settings</p>
-    </header>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="options.css" />
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>TwitchMe</h1>
+                <p class="tagline">Settings</p>
+            </header>
 
+            <section class="card">
+                <h2>Stream Behavior</h2>
+                <div class="form-group">
+                    <label for="pollingInterval">Check interval</label>
+                    <select id="pollingInterval">
+                        <option value="0.25">15 seconds</option>
+                        <option value="0.5">30 seconds</option>
+                        <option value="1">1 minute</option>
+                        <option value="5">5 minutes</option>
+                    </select>
+                    <p class="help">How often to check if channels are live.</p>
+                </div>
+                <p class="help">
+                    Mute, focus, and max tabs are now configured per-channel in
+                    the popup.
+                </p>
+                <div class="form-group checkbox">
+                    <label>
+                        <input type="checkbox" id="autoClose" />
+                        <span>Close tabs when stream ends</span>
+                    </label>
+                </div>
+            </section>
 
-    <section class="card">
-      <h2>Stream Behavior</h2>
-      <div class="form-group">
-        <label for="pollingInterval">Check interval</label>
-        <select id="pollingInterval">
-          <option value="0.25">15 seconds</option>
-          <option value="0.5">30 seconds</option>
-          <option value="1">1 minute</option>
-          <option value="5">5 minutes</option>
-        </select>
-        <p class="help">How often to check if channels are live (sub-minute uses setTimeout).</p>
-      </div>
-      <p class="help">Mute, focus, and max tabs are now configured per-channel in the popup.</p>
-      <div class="form-group checkbox">
-        <label>
-          <input type="checkbox" id="autoClose">
-          <span>Close tabs when stream ends</span>
-        </label>
-      </div>
-    </section>
+            <section class="card">
+                <h2>Your Channels</h2>
+                <div id="channelList"></div>
+            </section>
 
-    <section class="card">
-      <h2>Your Channels</h2>
-      <div id="channelList"></div>
-    </section>
-
-    <div class="actions">
-      <button id="saveBtn" class="btn-primary">Save Settings</button>
-      <span id="saveStatus"></span>
-    </div>
-  </div>
-  <script src="options.js"></script>
-</body>
+            <div class="actions">
+                <button id="saveBtn" class="btn-primary">Save Settings</button>
+                <span id="saveStatus"></span>
+            </div>
+        </div>
+        <script src="options.js"></script>
+    </body>
 </html>
