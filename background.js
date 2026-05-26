@@ -222,8 +222,8 @@ async function removeChannel(channel) {
   const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
   data.channels = data.channels.filter((c) => c.name !== channel);
   delete data.liveChannels[channel];
-  await closeStreamTab(channel);
   await chrome.storage.sync.set({ [STORAGE_KEY]: data });
+  await closeStreamTab(channel);
   return data;
 }
 
