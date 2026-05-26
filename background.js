@@ -12,7 +12,6 @@ chrome.runtime.onStartup.addListener(async () => {
   const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
   if (data) {
     data.liveChannels = {};
-    data.openTabs = {};
     await chrome.storage.sync.set({ [STORAGE_KEY]: data });
   }
   startPolling();
@@ -30,7 +29,6 @@ async function initDefaults() {
           pollingInterval: 1,
         },
         liveChannels: {},
-        openTabs: {},
       },
     });
   }
@@ -67,7 +65,7 @@ async function checkAllChannels() {
     const isLive = await checkChannelLive(ch.name);
     const wasLive = data.liveChannels[ch.name];
 
-    const hasTabs = await hasOpenTabs(ch.name, data);
+    const hasTabs = await hasExistingTab(ch.name);
 
     if (isLive) {
       if (!hasTabs) {
@@ -76,14 +74,10 @@ async function checkAllChannels() {
         } catch (e) {
           console.error("Failed to open tab for", ch.name, e);
         }
-        const fresh = await chrome.storage.sync.get(STORAGE_KEY);
-        data = fresh[STORAGE_KEY];
       }
       data.liveChannels[ch.name] = true;
     } else if (!isLive && wasLive && data.settings.autoClose) {
       await closeStreamTab(ch.name);
-      const fresh = await chrome.storage.sync.get(STORAGE_KEY);
-      data = fresh[STORAGE_KEY];
       data.liveChannels[ch.name] = false;
     }
   }
@@ -91,17 +85,13 @@ async function checkAllChannels() {
   await chrome.storage.sync.set({ [STORAGE_KEY]: data });
 }
 
-async function hasOpenTabs(channelName, data) {
-  const tabIds = data.openTabs[channelName];
-  if (!tabIds || !tabIds.length) return false;
-  for (const tabId of tabIds) {
-    try {
-      await chrome.tabs.get(tabId);
-      return true;
-    } catch {}
-  }
-  delete data.openTabs[channelName];
-  return false;
+function getTabUrl(channelName) {
+  return `https://www.twitch.tv/${channelName}*`;
+}
+
+async function hasExistingTab(channelName) {
+  const tabs = await chrome.tabs.query({ url: getTabUrl(channelName) });
+  return tabs.length > 0;
 }
 
 async function checkChannelLive(channel) {
@@ -126,7 +116,6 @@ async function checkChannelLive(channel) {
 
 async function openStreamTab(channelObj) {
   const count = channelObj.maxOpens || 1;
-  const tabIds = [];
 
   for (let i = 0; i < count; i++) {
     try {
@@ -134,7 +123,6 @@ async function openStreamTab(channelObj) {
         url: `https://www.twitch.tv/${channelObj.name}`,
         active: channelObj.focus,
       });
-      tabIds.push(tab.id);
 
       unmuteTwitchPlayer(tab.id);
 
@@ -151,15 +139,6 @@ async function openStreamTab(channelObj) {
     } catch (e) {
       console.error("Failed to create tab", i, "for", channelObj.name, e);
     }
-  }
-
-  if (tabIds.length) {
-    const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
-    if (!data.openTabs[channelObj.name]) {
-      data.openTabs[channelObj.name] = [];
-    }
-    data.openTabs[channelObj.name].push(...tabIds);
-    await chrome.storage.sync.set({ [STORAGE_KEY]: data });
   }
 }
 
@@ -185,31 +164,16 @@ function unmuteTwitchPlayer(tabId) {
 }
 
 async function closeStreamTab(channel) {
-  const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
-  const tabIds = data.openTabs[channel] || [];
-  for (const tabId of tabIds) {
+  const tabs = await chrome.tabs.query({ url: getTabUrl(channel) });
+  for (const tab of tabs) {
     try {
-      await chrome.tabs.remove(tabId);
+      await chrome.tabs.remove(tab.id);
     } catch {}
   }
-  delete data.openTabs[channel];
-  await chrome.storage.sync.set({ [STORAGE_KEY]: data });
 }
 
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
-  for (const [channel, ids] of Object.entries(data.openTabs)) {
-    const filtered = ids.filter((id) => id !== tabId);
-    if (filtered.length !== ids.length) {
-      if (filtered.length === 0) {
-        delete data.openTabs[channel];
-      } else {
-        data.openTabs[channel] = filtered;
-      }
-      break;
-    }
-  }
-  await chrome.storage.sync.set({ [STORAGE_KEY]: data });
+chrome.tabs.onRemoved.addListener(() => {
+  checkAllChannels();
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -261,9 +225,7 @@ async function removeChannel(channel) {
   const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
   data.channels = data.channels.filter((c) => c.name !== channel);
   delete data.liveChannels[channel];
-  if (data.openTabs[channel]?.length) {
-    await closeStreamTab(channel);
-  }
+  await closeStreamTab(channel);
   await chrome.storage.sync.set({ [STORAGE_KEY]: data });
   return data;
 }
