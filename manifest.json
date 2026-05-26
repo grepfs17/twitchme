@@ -1,16 +1,10 @@
 {
   "manifest_version": 3,
   "name": "TwitchMe",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-opens Twitch streams when channels go live",
-  "permissions": [
-    "storage",
-    "alarms",
-    "scripting"
-  ],
-  "host_permissions": [
-    "https://*.twitch.tv/*"
-  ],
+  "permissions": ["storage", "alarms", "scripting"],
+  "host_permissions": ["https://*.twitch.tv/*"],
   "background": {
     "service_worker": "background.js"
   },
