@@ -32,7 +32,7 @@ header {
 header h1 {
     font-size: 18px;
     font-weight: 700;
-    color: #9147ff;
+    color: #4a7aff;
     letter-spacing: -0.3px;
 }
 
@@ -72,7 +72,7 @@ header h1 {
 }
 
 .add-channel input:focus {
-    border-color: #9147ff;
+    border-color: #1046FD;
 }
 
 .add-channel input::placeholder {
@@ -81,7 +81,7 @@ header h1 {
 
 .btn-add {
     padding: 8px 16px;
-    background: #9147ff;
+    background: #1046FD;
     color: white;
     border: none;
     border-radius: 4px;
@@ -93,7 +93,7 @@ header h1 {
 }
 
 .btn-add:hover {
-    background: #772ce8;
+    background: #0C3AD9;
 }
 
 .channel-list {
@@ -180,7 +180,7 @@ header h1 {
 }
 
 .channel-name:hover {
-    color: #bf94ff;
+    color: #6B92FF;
     text-decoration: underline;
 }
 
@@ -226,9 +226,9 @@ header h1 {
 }
 
 .channel-toggle.active {
-    border-color: #9147ff;
-    color: #bf94ff;
-    background: rgba(145, 71, 255, 0.12);
+    border-color: #1046FD;
+    color: #6B92FF;
+    background: rgba(16, 70, 253, 0.12);
 }
 
 .channel-toggle:hover {
@@ -237,7 +237,7 @@ header h1 {
 }
 
 .channel-toggle.active:hover {
-    border-color: #bf94ff;
+    border-color: #6B92FF;
 }
 
 .channel-opens {
@@ -258,7 +258,7 @@ header h1 {
 }
 
 .channel-opens:focus {
-    border-color: #9147ff;
+    border-color: #1046FD;
     color: #efeff1;
 }
 

@@ -65,15 +65,16 @@ async function checkAllChannels() {
     const isLive = await checkChannelLive(ch.name);
     const wasLive = data.liveChannels[ch.name];
 
-    const hasTabs = await hasExistingTab(ch.name);
+    const openCount = await countOpenTabs(ch.name);
+    const needed = (ch.maxOpens || 1) - openCount;
 
-    if (isLive) {
-      if (!hasTabs) {
-        try {
-          await openStreamTab(ch);
-        } catch (e) {
-          console.error("Failed to open tab for", ch.name, e);
+    if (isLive && needed > 0) {
+      try {
+        for (let i = 0; i < needed; i++) {
+          await openStreamTab(ch, i);
         }
+      } catch (e) {
+        console.error("Failed to open tab for", ch.name, e);
       }
       data.liveChannels[ch.name] = true;
     } else if (!isLive && wasLive && data.settings.autoClose) {
@@ -89,9 +90,9 @@ function getTabUrl(channelName) {
   return `https://www.twitch.tv/${channelName}*`;
 }
 
-async function hasExistingTab(channelName) {
+async function countOpenTabs(channelName) {
   const tabs = await chrome.tabs.query({ url: getTabUrl(channelName) });
-  return tabs.length > 0;
+  return tabs.length;
 }
 
 async function checkChannelLive(channel) {
@@ -114,31 +115,27 @@ async function checkChannelLive(channel) {
   }
 }
 
-async function openStreamTab(channelObj) {
-  const count = channelObj.maxOpens || 1;
+async function openStreamTab(channelObj, index) {
+  try {
+    const tab = await chrome.tabs.create({
+      url: `https://www.twitch.tv/${channelObj.name}`,
+      active: channelObj.focus,
+    });
 
-  for (let i = 0; i < count; i++) {
-    try {
-      const tab = await chrome.tabs.create({
-        url: `https://www.twitch.tv/${channelObj.name}`,
-        active: channelObj.focus,
-      });
+    unmuteTwitchPlayer(tab.id);
 
-      unmuteTwitchPlayer(tab.id);
-
-      if (channelObj.muted) {
-        setTimeout(
-          async () => {
-            try {
-              await chrome.tabs.update(tab.id, { muted: true });
-            } catch {}
-          },
-          500 + i * 200,
-        );
-      }
-    } catch (e) {
-      console.error("Failed to create tab", i, "for", channelObj.name, e);
+    if (channelObj.muted) {
+      setTimeout(
+        async () => {
+          try {
+            await chrome.tabs.update(tab.id, { muted: true });
+          } catch {}
+        },
+        500 + (index || 0) * 200,
+      );
     }
+  } catch (e) {
+    console.error("Failed to create tab for", channelObj.name, e);
   }
 }
 
