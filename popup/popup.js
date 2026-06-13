@@ -1,3 +1,5 @@
+const STORAGE_KEY = "twitchme";
+
 document.addEventListener("DOMContentLoaded", () => {
   const channelInput = document.getElementById("channelInput");
   const addBtn = document.getElementById("addBtn");
@@ -9,6 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadStatus();
 
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "sync" && changes[STORAGE_KEY]) {
+      renderView(changes[STORAGE_KEY].newValue);
+    }
+  });
+
   addBtn.addEventListener("click", addChannel);
   channelInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") addChannel();
@@ -17,6 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
   checkNowBtn.addEventListener("click", async () => {
     statusText.textContent = "Checking...";
     chrome.runtime.sendMessage({ type: "CHECK_NOW" }, (data) => {
+      if (chrome.runtime.lastError || !data) {
+        showError("failed to check streams");
+        return;
+      }
       renderView(data);
     });
   });
@@ -33,6 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.runtime.sendMessage(
       { type: "ADD_CHANNEL", channel: name },
       (data) => {
+        if (chrome.runtime.lastError || !data) {
+          showError("failed to add channel");
+          return;
+        }
         renderView(data);
       },
     );
@@ -40,8 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadStatus() {
     chrome.runtime.sendMessage({ type: "GET_STATUS" }, (data) => {
+      if (chrome.runtime.lastError || !data) {
+        showError("could not load status");
+        return;
+      }
       renderView(data);
     });
+  }
+
+  function showError(msg) {
+    statusText.textContent = `Error: ${msg}`;
   }
 
   function renderView(data) {
@@ -99,7 +123,13 @@ document.addEventListener("DOMContentLoaded", () => {
             channel: ch.name,
             settings: { muted: !ch.muted },
           },
-          (d) => renderView(d),
+          (d) => {
+            if (chrome.runtime.lastError || !d) {
+              showError("failed to update channel");
+              return;
+            }
+            renderView(d);
+          },
         );
       });
 
@@ -114,7 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
             channel: ch.name,
             settings: { focus: !ch.focus },
           },
-          (d) => renderView(d),
+          (d) => {
+            if (chrome.runtime.lastError || !d) {
+              showError("failed to update channel");
+              return;
+            }
+            renderView(d);
+          },
         );
       });
 
@@ -133,7 +169,13 @@ document.addEventListener("DOMContentLoaded", () => {
             channel: ch.name,
             settings: { maxOpens: Math.max(1, Math.min(10, val)) },
           },
-          (d) => renderView(d),
+          (d) => {
+            if (chrome.runtime.lastError || !d) {
+              showError("failed to update channel");
+              return;
+            }
+            renderView(d);
+          },
         );
       });
 
@@ -145,6 +187,10 @@ document.addEventListener("DOMContentLoaded", () => {
         chrome.runtime.sendMessage(
           { type: "REMOVE_CHANNEL", channel: ch.name },
           (d) => {
+            if (chrome.runtime.lastError || !d) {
+              showError("failed to remove channel");
+              return;
+            }
             renderView(d);
           },
         );

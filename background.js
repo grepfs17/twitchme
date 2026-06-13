@@ -1,6 +1,7 @@
 const STORAGE_KEY = "twitchme";
 const TWITCH_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
-let pollTimeout = null;
+let subMinuteTimers = [];
+let checkLock = null;
 
 chrome.runtime.onInstalled.addListener(async () => {
   await initDefaults();
@@ -36,54 +37,67 @@ async function initDefaults() {
 
 function startPolling(intervalMinutes) {
   chrome.alarms.clear("checkStreams");
-  if (pollTimeout) clearTimeout(pollTimeout);
-  pollTimeout = null;
+  subMinuteTimers.forEach(clearTimeout);
+  subMinuteTimers = [];
 
-  const interval = intervalMinutes ?? 1;
-
-  if (interval >= 1) {
-    chrome.alarms.create("checkStreams", { periodInMinutes: interval });
-  } else {
-    const ms = Math.round(interval * 60 * 1000);
-    function tick() {
-      checkAllChannels();
-      pollTimeout = setTimeout(tick, ms);
-    }
-    pollTimeout = setTimeout(tick, ms);
-  }
+  const interval = Math.max(1, intervalMinutes ?? 1);
+  chrome.alarms.create("checkStreams", { periodInMinutes: interval });
 }
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "checkStreams") checkAllChannels();
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== "checkStreams") return;
+
+  const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
+  const interval = data?.settings?.pollingInterval ?? 1;
+
+  if (interval < 1) {
+    subMinuteTimers.forEach(clearTimeout);
+    subMinuteTimers = [];
+    const ms = Math.round(interval * 60 * 1000);
+    const count = Math.floor(60000 / ms);
+    for (let i = 0; i < count; i++) {
+      subMinuteTimers.push(setTimeout(() => checkAllChannels(), i * ms));
+    }
+  } else {
+    checkAllChannels();
+  }
 });
 
 async function checkAllChannels() {
-  let { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
-  if (!data || !data.channels.length) return;
+  if (checkLock) return checkLock;
+  checkLock = (async () => {
+    try {
+      let { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);
+      if (!data || !data.channels.length) return;
 
-  for (const ch of data.channels) {
-    const isLive = await checkChannelLive(ch.name);
-    const wasLive = data.liveChannels[ch.name];
+      for (const ch of data.channels) {
+        const isLive = await checkChannelLive(ch.name);
+        const wasLive = data.liveChannels[ch.name];
 
-    const openCount = await countOpenTabs(ch.name);
-    const needed = (ch.maxOpens || 1) - openCount;
+        const openCount = await countOpenTabs(ch.name);
+        const needed = (ch.maxOpens || 1) - openCount;
 
-    if (isLive && needed > 0) {
-      try {
-        for (let i = 0; i < needed; i++) {
-          await openStreamTab(ch, i);
+        if (isLive && needed > 0) {
+          try {
+            for (let i = 0; i < needed; i++) {
+              await openStreamTab(ch, i);
+            }
+          } catch (e) {
+            console.error("Failed to open tab for", ch.name, e);
+          }
+          data.liveChannels[ch.name] = true;
+        } else if (!isLive && wasLive && data.settings.autoClose) {
+          await closeStreamTab(ch.name);
+          data.liveChannels[ch.name] = false;
         }
-      } catch (e) {
-        console.error("Failed to open tab for", ch.name, e);
       }
-      data.liveChannels[ch.name] = true;
-    } else if (!isLive && wasLive && data.settings.autoClose) {
-      await closeStreamTab(ch.name);
-      data.liveChannels[ch.name] = false;
-    }
-  }
 
-  await chrome.storage.sync.set({ [STORAGE_KEY]: data });
+      await chrome.storage.sync.set({ [STORAGE_KEY]: data });
+    } finally {
+      checkLock = null;
+    }
+  })();
+  return checkLock;
 }
 
 function getTabUrl(channelName) {
@@ -122,8 +136,6 @@ async function openStreamTab(channelObj, index) {
       active: channelObj.focus,
     });
 
-    unmuteTwitchPlayer(tab.id);
-
     if (channelObj.muted) {
       setTimeout(
         async () => {
@@ -133,6 +145,8 @@ async function openStreamTab(channelObj, index) {
         },
         500 + (index || 0) * 200,
       );
+    } else {
+      unmuteTwitchPlayer(tab.id);
     }
   } catch (e) {
     console.error("Failed to create tab for", channelObj.name, e);

@@ -12,6 +12,10 @@ Chrome extension that monitors Twitch channels and opens new tabs when they go l
 - Polling interval: 15s, 30s, 1min, or 5min
 - Optionally close tabs when the stream ends
 
+## Chrome Web Store
+
+Available on the [Chrome Web Store](https://chromewebstore.google.com/detail/twitchme/hmneicbjhnomfecllcpklblflffkpehp).
+
 ## Setup
 
 1. Open `chrome://extensions`

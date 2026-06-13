@@ -26,15 +26,27 @@ function renderChannels(channels) {
   channels.forEach((ch) => {
     const tag = document.createElement("span");
     tag.className = "channel-tag";
-    tag.innerHTML = `${ch.name} <span class="remove" data-channel="${ch.name}">&times;</span>`;
-    tag.querySelector(".remove").addEventListener("click", async () => {
+
+    const nameSpan = document.createTextNode(ch.name + " ");
+    tag.appendChild(nameSpan);
+
+    const remove = document.createElement("span");
+    remove.className = "remove";
+    remove.textContent = "\u00d7";
+    remove.addEventListener("click", async () => {
       chrome.runtime.sendMessage(
         { type: "REMOVE_CHANNEL", channel: ch.name },
         (data) => {
+          if (chrome.runtime.lastError || !data) {
+            showSaveStatus("Error: failed to remove channel", "#eb0400");
+            return;
+          }
           renderChannels(data.channels);
         },
       );
     });
+    tag.appendChild(remove);
+
     list.appendChild(tag);
   });
 }
@@ -46,15 +58,24 @@ async function saveSettings() {
     autoClose: document.getElementById("autoClose").checked,
   };
 
-  const status = document.getElementById("saveStatus");
-  status.textContent = "Saving...";
-  status.style.color = "#adadb8";
+  showSaveStatus("Saving...", "#adadb8");
 
   chrome.runtime.sendMessage({ type: "UPDATE_SETTINGS", settings }, () => {
-    status.textContent = "Saved!";
-    status.style.color = "#00d94e";
+    if (chrome.runtime.lastError) {
+      showSaveStatus("Error: failed to save", "#eb0400");
+      return;
+    }
+    showSaveStatus("Saved!", "#00d94e");
+  });
+}
+
+function showSaveStatus(text, color) {
+  const status = document.getElementById("saveStatus");
+  status.textContent = text;
+  status.style.color = color;
+  if (color !== "#adadb8") {
     setTimeout(() => {
       status.textContent = "";
     }, 2000);
-  });
+  }
 }
