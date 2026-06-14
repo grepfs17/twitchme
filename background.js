@@ -1,4 +1,5 @@
 const STORAGE_KEY = "twitchme";
+// This is a public Twitch client ID
 const TWITCH_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 let subMinuteTimers = [];
 let checkLock = null;
