@@ -1,4 +1,5 @@
 const STORAGE_KEY = "twitchme";
+let detectedAdblockers = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   const channelInput = document.getElementById("channelInput");
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsBtn = document.getElementById("settingsBtn");
 
   loadStatus();
+  detectAdblockers();
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && changes[STORAGE_KEY]) {
@@ -66,11 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showError(msg) {
     statusText.textContent = `Error: ${msg}`;
-  }
-
-  function renderView(data) {
-    renderChannels(data);
-    updateStatusText(data);
   }
 
   function renderChannels(data) {
@@ -212,5 +209,85 @@ document.addEventListener("DOMContentLoaded", () => {
       Boolean,
     ).length;
     statusText.textContent = `${liveCount}/${channels.length} live`;
+  }
+
+  async function detectAdblockers() {
+    chrome.runtime.sendMessage({ type: "DETECT_ADBLOCKERS" }, (result) => {
+      if (chrome.runtime.lastError || !result) return;
+      detectedAdblockers = result;
+      loadStatus();
+    });
+  }
+
+  function renderAdblockerWarnings(data) {
+    const warningEl = document.getElementById("adblockerWarning");
+    if (!detectedAdblockers.length) {
+      warningEl.style.display = "none";
+      return;
+    }
+
+    const liveChannels = (data.channels || []).filter(
+      (ch) => data.liveChannels?.[ch.name],
+    );
+
+    const supporting = detectedAdblockers.filter((a) => a.supportsRules);
+    const others = detectedAdblockers.filter((a) => !a.supportsRules);
+
+    let html = "";
+
+    if (supporting.length && liveChannels.length) {
+      const names = supporting.map((a) => a.name).join(", ");
+      html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
+      html += `<p class="adblocker-sub">If a stream isn't loading, whitelist it in your ad blocker:</p>`;
+
+      liveChannels.forEach((ch) => {
+        const rule = `@@||twitch.tv/${ch.name}$document`;
+        html += `<div class="adblocker-rule">`;
+        html += `<span class="adblocker-rule-code">${rule}</span>`;
+        html += `<button class="copy-rule-btn" data-rule="${rule}">Copy</button>`;
+        html += `</div>`;
+      });
+
+      supporting.forEach((a) => {
+        if (a.dashboardUrl) {
+          html += `<button class="open-dashboard-btn" data-url="${a.dashboardUrl}">Open ${a.name} Dashboard</button>`;
+        }
+      });
+
+      html += `<p class="adblocker-help">Add the filter in your ad blocker's dashboard, then reload the stream.</p>`;
+    } else if (others.length) {
+      const names = others.map((a) => a.name).join(", ");
+      html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
+      html += `<p class="adblocker-sub">If a stream isn't loading, try disabling your ad blocker for this Twitch page.</p>`;
+    }
+
+    if (html) {
+      warningEl.innerHTML = html;
+      warningEl.style.display = "block";
+    } else {
+      warningEl.style.display = "none";
+    }
+
+    warningEl.querySelectorAll(".copy-rule-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const rule = btn.dataset.rule;
+        navigator.clipboard.writeText(rule).then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => (btn.textContent = "Copy"), 1500);
+        });
+      });
+    });
+
+    warningEl.querySelectorAll(".open-dashboard-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        chrome.tabs.create({ url: btn.dataset.url });
+      });
+    });
+  }
+
+  function renderView(data) {
+    renderChannels(data);
+    updateStatusText(data);
+    renderAdblockerWarnings(data);
   }
 });

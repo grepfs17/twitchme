@@ -8,6 +8,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   await initDefaults();
   startPolling();
   checkAllChannels();
+  detectAdblockers();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
@@ -18,6 +19,7 @@ chrome.runtime.onStartup.addListener(async () => {
   }
   startPolling();
   checkAllChannels();
+  detectAdblockers();
 });
 
 async function initDefaults() {
@@ -236,8 +238,62 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "UPDATE_SETTINGS":
       updateSettings(message.settings).then(sendResponse);
       return true;
+    case "DETECT_ADBLOCKERS":
+      detectAdblockers().then(sendResponse);
+      return true;
   }
 });
+
+const ADBLOCKER_IDS = {
+  cjpalhdlnbpafiamejdnhcphjbkeiagm: {
+    name: "uBlock Origin",
+    supportsRules: true,
+    dashboardUrl:
+      "chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html",
+  },
+  cfhdojbkjhnklbpkdaibdccddilifddb: {
+    name: "AdBlock Plus",
+    supportsRules: true,
+    dashboardUrl:
+      "chrome-extension://cfhdojbkjhnklbpkdaibdccddilifddb/options.html",
+  },
+  bgnkhhnnamicmpeenaelnjfhikgbkllg: {
+    name: "AdGuard",
+    supportsRules: true,
+    dashboardUrl:
+      "chrome-extension://bgnkhhnnamicmpeenaelnjfhikgbkllg/pages/options.html#/user-filter",
+  },
+  gighmmpiobklfepjocnamgkkbiglidom: {
+    name: "AdBlock",
+    supportsRules: true,
+    dashboardUrl:
+      "chrome-extension://gighmmpiobklfepjocnamgkkbiglidom/options.html#customize",
+  },
+  mlomiejdfkolichcflejclcbmpeaniij: {
+    name: "Ghostery",
+    supportsRules: false,
+    dashboardUrl: "",
+  },
+};
+
+async function detectAdblockers() {
+  const extensions = await chrome.management.getAll();
+  const detected = [];
+  for (const ext of extensions) {
+    if (ext.enabled && ADBLOCKER_IDS[ext.id]) {
+      detected.push({ id: ext.id, ...ADBLOCKER_IDS[ext.id] });
+    }
+  }
+
+  if (detected.length > 0) {
+    chrome.action.setBadgeText({ text: "!" });
+    chrome.action.setBadgeBackgroundColor({ color: "#ffb700" });
+  } else {
+    chrome.action.setBadgeText({ text: "" });
+  }
+
+  return detected;
+}
 
 async function addChannel(channel) {
   const { [STORAGE_KEY]: data } = await chrome.storage.sync.get(STORAGE_KEY);

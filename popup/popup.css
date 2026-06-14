@@ -72,7 +72,7 @@ header h1 {
 }
 
 .add-channel input:focus {
-    border-color: #1046FD;
+    border-color: #1046fd;
 }
 
 .add-channel input::placeholder {
@@ -81,7 +81,7 @@ header h1 {
 
 .btn-add {
     padding: 8px 16px;
-    background: #1046FD;
+    background: #1046fd;
     color: white;
     border: none;
     border-radius: 4px;
@@ -93,7 +93,7 @@ header h1 {
 }
 
 .btn-add:hover {
-    background: #0C3AD9;
+    background: #0c3ad9;
 }
 
 .channel-list {
@@ -180,7 +180,7 @@ header h1 {
 }
 
 .channel-name:hover {
-    color: #6B92FF;
+    color: #6b92ff;
     text-decoration: underline;
 }
 
@@ -226,8 +226,8 @@ header h1 {
 }
 
 .channel-toggle.active {
-    border-color: #1046FD;
-    color: #6B92FF;
+    border-color: #1046fd;
+    color: #6b92ff;
     background: rgba(16, 70, 253, 0.12);
 }
 
@@ -237,7 +237,7 @@ header h1 {
 }
 
 .channel-toggle.active:hover {
-    border-color: #6B92FF;
+    border-color: #6b92ff;
 }
 
 .channel-opens {
@@ -258,7 +258,7 @@ header h1 {
 }
 
 .channel-opens:focus {
-    border-color: #1046FD;
+    border-color: #1046fd;
     color: #efeff1;
 }
 
@@ -319,4 +319,90 @@ footer button:hover {
     font-size: 11px;
     color: #6a6a6f;
     font-weight: 500;
+}
+
+.adblocker-warning {
+    margin: 8px 16px;
+    padding: 10px 12px;
+    background: rgba(255, 183, 0, 0.08);
+    border: 1px solid rgba(255, 183, 0, 0.25);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #efeff1;
+}
+
+.adblocker-header {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #ffb700;
+}
+
+.adblocker-sub {
+    color: #adadb8;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.adblocker-rule {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.adblocker-rule-code {
+    flex: 1;
+    font-family: "SF Mono", "Consolas", "Courier New", monospace;
+    font-size: 11px;
+    background: #18181b;
+    padding: 4px 8px;
+    border-radius: 3px;
+    color: #6b92ff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: 1px solid #2a2a2d;
+}
+
+.copy-rule-btn {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    background: #3a3a3d;
+    color: #efeff1;
+    border: none;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.copy-rule-btn:hover {
+    background: #53535f;
+}
+
+.adblocker-help {
+    color: #6a6a6f;
+    font-size: 11px;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.open-dashboard-btn {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 4px 10px;
+    background: rgba(107, 146, 255, 0.12);
+    color: #6B92FF;
+    border: 1px solid rgba(107, 146, 255, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.open-dashboard-btn:hover {
+    background: rgba(107, 146, 255, 0.22);
 }
