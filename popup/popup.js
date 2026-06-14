@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (supporting.length && liveChannels.length) {
       const names = supporting.map((a) => a.name).join(", ");
       html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
-      html += `<p class="adblocker-sub">If a stream isn't loading, whitelist it in your ad blocker:</p>`;
+      html += `<p class="adblocker-sub">Whitelist Twitch channels in your ad blocker if you want to support the streamer.</p>`;
 
       liveChannels.forEach((ch) => {
         const rule = `@@||twitch.tv/${ch.name}$document`;
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (others.length) {
       const names = others.map((a) => a.name).join(", ");
       html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
-      html += `<p class="adblocker-sub">If a stream isn't loading, try disabling your ad blocker for this Twitch page.</p>`;
+      html += `<p class="adblocker-sub">Whitelist Twitch channels if you want to support the streamer.</p>`;
     }
 
     if (html) {
