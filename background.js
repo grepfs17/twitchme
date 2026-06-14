@@ -154,21 +154,43 @@ async function openStreamTab(channelObj, index) {
 }
 
 function unmuteTwitchPlayer(tabId) {
+  chrome.tabs.update(tabId, { muted: false }).catch(() => {});
+
   chrome.scripting
     .executeScript({
       target: { tabId },
       func: () => {
-        let attempts = 0;
-        const timer = setInterval(() => {
+        function unmuteVideo() {
           const video = document.querySelector("video");
           if (video) {
             video.muted = false;
             video.volume = 1.0;
-            clearInterval(timer);
+            video.play().catch(() => {});
           }
+
+          const unmuteBtn =
+            document.querySelector(
+              '[data-a-target="player-mute-unmute-button"]',
+            ) ||
+            document.querySelector('button[aria-label="Unmute"]') ||
+            document.querySelector(".player-mute-unmute-button");
+          if (
+            unmuteBtn &&
+            unmuteBtn
+              .getAttribute("aria-label")
+              ?.toLowerCase()
+              .includes("unmute")
+          ) {
+            unmuteBtn.click();
+          }
+        }
+
+        let attempts = 0;
+        const timer = setInterval(() => {
+          unmuteVideo();
           attempts++;
-          if (attempts >= 40) clearInterval(timer);
-        }, 1000);
+          if (attempts >= 60) clearInterval(timer);
+        }, 500);
       },
     })
     .catch(() => {});
