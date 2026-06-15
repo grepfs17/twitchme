@@ -1,4 +1,30 @@
-document.addEventListener("DOMContentLoaded", loadSettings);
+document.addEventListener("DOMContentLoaded", () => {
+  loadSettings();
+  detectAdblockers();
+});
+
+async function detectAdblockers() {
+  const bait = document.createElement("div");
+  bait.setAttribute(
+    "class",
+    "ad_banner ad_unit adsbygoogle pub_300x250 textAd text_ad text_ads",
+  );
+  bait.style.cssText =
+    "height:1px!important;width:1px!important;position:absolute!important;left:-9999px!important;";
+  document.documentElement.appendChild(bait);
+
+  await new Promise((r) => setTimeout(r, 100));
+
+  const blocked =
+    bait.offsetParent === null ||
+    bait.clientHeight === 0 ||
+    bait.clientHeight === 1 ||
+    getComputedStyle(bait).display === "none" ||
+    getComputedStyle(bait).visibility === "hidden";
+
+  bait.remove();
+  await chrome.storage.local.set({ adblockerDetected: blocked });
+}
 document.getElementById("saveBtn").addEventListener("click", saveSettings);
 
 async function loadSettings() {

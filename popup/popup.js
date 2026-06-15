@@ -1,5 +1,5 @@
 const STORAGE_KEY = "twitchme";
-let detectedAdblockers = [];
+let adblockerDetected = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   const channelInput = document.getElementById("channelInput");
@@ -11,11 +11,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsBtn = document.getElementById("settingsBtn");
 
   loadStatus();
-  detectAdblockers();
+  loadAdblockerStatus();
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && changes[STORAGE_KEY]) {
       renderView(changes[STORAGE_KEY].newValue);
+    }
+    if (area === "local" && changes.adblockerDetected) {
+      adblockerDetected = !!changes.adblockerDetected.newValue;
+      loadStatus();
     }
   });
 
@@ -211,17 +215,18 @@ document.addEventListener("DOMContentLoaded", () => {
     statusText.textContent = `${liveCount}/${channels.length} live`;
   }
 
-  async function detectAdblockers() {
-    chrome.runtime.sendMessage({ type: "DETECT_ADBLOCKERS" }, (result) => {
-      if (chrome.runtime.lastError || !result) return;
-      detectedAdblockers = result;
+  async function loadAdblockerStatus() {
+    const { adblockerDetected: stored } =
+      await chrome.storage.local.get("adblockerDetected");
+    if (stored !== undefined) {
+      adblockerDetected = !!stored;
       loadStatus();
-    });
+    }
   }
 
   function renderAdblockerWarnings(data) {
     const warningEl = document.getElementById("adblockerWarning");
-    if (!detectedAdblockers.length) {
+    if (!adblockerDetected) {
       warningEl.style.display = "none";
       return;
     }
@@ -229,58 +234,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const liveChannels = (data.channels || []).filter(
       (ch) => data.liveChannels?.[ch.name],
     );
-
-    const supporting = detectedAdblockers.filter((a) => a.supportsRules);
-    const others = detectedAdblockers.filter((a) => !a.supportsRules);
-
-    let html = "";
-
-    if (supporting.length && liveChannels.length) {
-      const names = supporting.map((a) => a.name).join(", ");
-      html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
-      html += `<p class="adblocker-sub">Whitelist Twitch channels in your ad blocker if you want to support the streamer.</p>`;
-
-      liveChannels.forEach((ch) => {
-        const rule = `@@||twitch.tv/${ch.name}$document`;
-        html += `<div class="adblocker-rule">`;
-        html += `<span class="adblocker-rule-code">${rule}</span>`;
-        html += `<button class="copy-rule-btn" data-rule="${rule}">Copy</button>`;
-        html += `</div>`;
-      });
-
-      supporting.forEach((a) => {
-        if (a.dashboardUrl) {
-          html += `<button class="open-dashboard-btn" data-url="${a.dashboardUrl}">Open ${a.name} Dashboard</button>`;
-        }
-      });
-
-      html += `<p class="adblocker-help">Add the filter in your ad blocker's dashboard, then reload the stream.</p>`;
-    } else if (others.length) {
-      const names = others.map((a) => a.name).join(", ");
-      html += `<div class="adblocker-header">⚠️ <strong>${names}</strong> detected</div>`;
-      html += `<p class="adblocker-sub">Whitelist Twitch channels if you want to support the streamer.</p>`;
-    }
-
-    if (html) {
-      warningEl.innerHTML = html;
-      warningEl.style.display = "block";
-    } else {
+    if (!liveChannels.length) {
       warningEl.style.display = "none";
+      return;
     }
 
-    warningEl.querySelectorAll(".copy-rule-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const rule = btn.dataset.rule;
-        navigator.clipboard.writeText(rule).then(() => {
-          btn.textContent = "Copied!";
-          setTimeout(() => (btn.textContent = "Copy"), 1500);
-        });
-      });
-    });
+    warningEl.innerHTML = `<div class="adblocker-header">⚠️ <strong>Ad blocker detected</strong></div>
+      <p class="adblocker-sub">Remember to whitelist Twitch channels on your ad blocker if you want to support the streamer.</p>
+      <button class="learn-how-btn">Learn how</button>`;
+    warningEl.style.display = "block";
 
-    warningEl.querySelectorAll(".open-dashboard-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        chrome.tabs.create({ url: btn.dataset.url });
+    warningEl.querySelector(".learn-how-btn").addEventListener("click", () => {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("help/adblockers.html"),
       });
     });
   }
