@@ -28,7 +28,7 @@ async function initDefaults() {
       [STORAGE_KEY]: {
         channels: [],
         settings: {
-          autoClose: true,
+          autoClose: false,
           pollingInterval: 1,
         },
         liveChannels: {},
@@ -88,9 +88,11 @@ async function checkAllChannels() {
             console.error("Failed to open tab for", ch.name, e);
           }
           data.liveChannels[ch.name] = true;
-        } else if (!isLive && wasLive && data.settings.autoClose) {
-          await closeStreamTab(ch.name);
+        } else if (!isLive && wasLive) {
           data.liveChannels[ch.name] = false;
+          if (data.settings.autoClose) {
+            await closeStreamTab(ch.name);
+          }
         }
       }
 

@@ -35,7 +35,7 @@ async function loadSettings() {
     d.settings?.pollingInterval ?? 1,
   );
   document.getElementById("autoClose").checked =
-    d.settings?.autoClose !== false;
+    d.settings?.autoClose === true;
 
   renderChannels(d.channels || []);
 }
