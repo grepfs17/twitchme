@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="adblockers.css" />
+        <title>TwitchMe - How to Whitelist Twitch Channels</title>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <a href="https://www.twitch.tv" class="logo">TwitchMe</a>
+                <p class="tagline">
+                    How to whitelist Twitch channels in your ad blocker
+                </p>
+            </header>
+
+            <div class="info-box">
+                <p>
+                    Whitelisting Twitch channels allows the streamer to earn ad
+                    revenue. Add the filter rule below to your ad blocker to
+                    disable blocking on a specific channel.
+                </p>
+                <div class="filter-rule">
+                    <code>@@||twitch.tv/CHANNEL_NAME$document</code>
+                </div>
+                <p class="help-text">
+                    Replace <code>CHANNEL_NAME</code> with the streamer's
+                    username (e.g. <code>mushu</code>).
+                </p>
+            </div>
+
+            <section class="card your-channels-card">
+                <div class="card-header">
+                    <h2>Your Channels</h2>
+                    <span class="badge">Ready to Copy</span>
+                </div>
+                <p class="channels-desc">
+                    Add these filters to your ad blocker to whitelist your
+                    followed channels.
+                </p>
+                <div id="channelRules" class="channel-rules"></div>
+                <p id="noChannels" class="no-channels" style="display: none">
+                    No channels added in TwitchMe yet.
+                </p>
+                <button
+                    id="copyAllBtn"
+                    class="copy-all-btn"
+                    style="display: none"
+                >
+                    Copy All Rules
+                </button>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2>uBlock Origin</h2>
+                    <span class="badge">Most Popular</span>
+                </div>
+                <ol class="steps">
+                    <li>
+                        Click the <strong>uBlock Origin</strong> icon in your
+                        toolbar
+                    </li>
+                    <li>
+                        Click the <strong>gears icon</strong> (Open the
+                        dashboard)
+                    </li>
+                    <li>Go to the <strong>My filters</strong> tab</li>
+                    <li>
+                        Add the filter rule on a new line:
+                        <div class="example-rule">
+                            <code>@@||twitch.tv/mushu$document</code>
+                        </div>
+                    </li>
+                    <li>Click <strong>Apply changes</strong></li>
+                    <li>Reload the Twitch stream page</li>
+                </ol>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2>AdBlock Plus</h2>
+                </div>
+                <ol class="steps">
+                    <li>
+                        Click the <strong>AdBlock Plus</strong> icon in your
+                        toolbar
+                    </li>
+                    <li>Click <strong>Options</strong> (gear icon)</li>
+                    <li>Go to the <strong>Advanced</strong> tab</li>
+                    <li>Scroll down to <strong>Custom filters</strong></li>
+                    <li>
+                        Click <strong>Add filter</strong> and enter:
+                        <div class="example-rule">
+                            <code>@@||twitch.tv/mushu$document</code>
+                        </div>
+                    </li>
+                    <li>Reload the Twitch stream page</li>
+                </ol>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2>AdGuard</h2>
+                </div>
+                <ol class="steps">
+                    <li>
+                        Click the <strong>AdGuard</strong> icon in your toolbar
+                    </li>
+                    <li>Click the <strong>gear icon</strong> (Settings)</li>
+                    <li>Go to <strong>Allowlist</strong> in the left menu</li>
+                    <li>
+                        Add the filter rule:
+                        <div class="example-rule">
+                            <code>@@||twitch.tv/mushu$document</code>
+                        </div>
+                    </li>
+                    <li>Click <strong>Add</strong></li>
+                    <li>Reload the Twitch stream page</li>
+                </ol>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2>AdBlock</h2>
+                </div>
+                <ol class="steps">
+                    <li>
+                        Click the <strong>AdBlock</strong> icon in your toolbar
+                    </li>
+                    <li>Click <strong>Options</strong></li>
+                    <li>Go to the <strong>Customize</strong> tab</li>
+                    <li>Scroll to <strong>Stop blocking ads</strong></li>
+                    <li>
+                        Enter the filter rule:
+                        <div class="example-rule">
+                            <code>@@||twitch.tv/mushu$document</code>
+                        </div>
+                    </li>
+                    <li>Click <strong>Add</strong></li>
+                    <li>Reload the Twitch stream page</li>
+                </ol>
+            </section>
+
+            <footer>
+                <p>
+                    After adding the filter, reload the stream page. The ad
+                    blocker will no longer block ads on that specific channel.
+                </p>
+            </footer>
+        </div>
+        <script src="adblockers.js"></script>
+    </body>
+</html>
