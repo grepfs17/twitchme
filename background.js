@@ -106,9 +106,18 @@ function getTabUrl(channelName) {
   return `https://www.twitch.tv/${channelName}*`;
 }
 
+function isChannelTab(tab, channelName) {
+  try {
+    const path = new URL(tab.url).pathname.toLowerCase();
+    return path === `/${channelName}` || path.startsWith(`/${channelName}/`);
+  } catch {
+    return false;
+  }
+}
+
 async function countOpenTabs(channelName) {
   const tabs = await chrome.tabs.query({ url: getTabUrl(channelName) });
-  return tabs.length;
+  return tabs.filter((tab) => isChannelTab(tab, channelName)).length;
 }
 
 async function checkChannelLive(channel) {
@@ -201,6 +210,7 @@ function unmuteTwitchPlayer(tabId) {
 async function closeStreamTab(channel) {
   const tabs = await chrome.tabs.query({ url: getTabUrl(channel) });
   for (const tab of tabs) {
+    if (!isChannelTab(tab, channel)) continue;
     try {
       await chrome.tabs.remove(tab.id);
     } catch {}
